@@ -44,7 +44,10 @@ $(function () {
 
     $('#change-status').click(function () {
         agent.isOnline = !agent.isOnline;
-        myHub.server.changeStatus(agent.isOnline);
+     //   var messages = $('#chatmsgs' + chatId).html();
+        var chatId = getCurrentChatId();
+        myHub.server.changeStatus(agent.isOnline, chatId);
+        
 
         showStatus();
     });
@@ -264,7 +267,7 @@ $(function () {
     };
 });
 
-function showStatus() {
+ function showStatus() {
     $('#change-status').text(agent.name + ' ' + (agent.isOnline ? 'set offline' : 'set online'));
 }
 

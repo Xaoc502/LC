@@ -91,7 +91,7 @@ namespace LC.LCSK
                 Clients.Caller.loginResult(false, "pass", "");
         }
 
-        public void ChangeStatus(bool online)
+        public void ChangeStatus(bool online, string connectionId)
         {
             var agent = Agents.SingleOrDefault(x => x.Value.Id == Context.ConnectionId).Value;
             if (agent != null)
@@ -100,8 +100,39 @@ namespace LC.LCSK
 
                 // TODO: Check if the agent was in chat sessions.
 
+               AutoTransfer(connectionId);
+               //     RequestChat("hello");
+                
                 Clients.All.onlineStatus(Agents.Count(x => x.Value.IsOnline) > 0);
             }
+        }
+
+        //Transfer user to another agent
+        private void AutoTransfer(string connectionId)
+        {
+            var workload = from a in Agents
+                           where a.Value.IsOnline
+                           select new
+                           {
+                               Id = a.Value.Id,
+                               Name = a.Value.Name,
+                               Count = ChatSessions.Count(x => x.Value == a.Value.Id)
+                           };
+
+            if (workload == null)
+            {
+                Clients.Caller.addMessage("", "No agent are currently available.");
+                return;
+            }
+
+            var lessBuzy = workload.OrderBy(x => x.Count).FirstOrDefault();
+
+            if (lessBuzy == null)
+            {
+                Clients.Caller.addMessage("", "No agent are currently available.");
+                return;
+            }
+            Transfer(connectionId, lessBuzy.Name, "Here is all msgs \n Yes \n No");
         }
 
         public void EngageVisitor(string connectionId)
@@ -222,7 +253,7 @@ namespace LC.LCSK
                 Clients.Client(agent.Id).newChat(connectionId);
                 Clients.Client(agent.Id).addMessage(connectionId, "system", "New chat transfered to you.");
                 Clients.Client(agent.Id).addMessage(connectionId, ">>", "Starting previous conversation");
-                Clients.Client(agent.Id).addMessage("", messages);
+                Clients.Client(agent.Id).addMessage(connectionId, messages);
                 Clients.Client(agent.Id).addMessage(connectionId, "<<", "End of previous conversation");
 
                 Clients.Client(connectionId).addMessage("", "You have been transfered to " + agent.Name);
