@@ -43,11 +43,18 @@ $(function () {
     });
 
     $('#change-status').click(function () {
-        agent.isOnline = !agent.isOnline;
-     //   var messages = $('#chatmsgs' + chatId).html();
+        agent.isOnline = !agent.isOnline;     
         var chatId = getCurrentChatId();
-        myHub.server.changeStatus(agent.isOnline, chatId);
-        
+        var messages = $('#chatmsgs' + chatId).html();
+        myHub.server.changeStatus(agent.isOnline, chatId, messages);
+
+        setTimeout(function () {
+            $("div[data-id='" + chatId + "']").remove();
+            $('#chatmsgs' + chatId).remove();
+            $('.chat-session').removeClass('active');
+            showChat('rt');
+        }, 1500);
+             
 
         showStatus();
     });

@@ -91,7 +91,7 @@ namespace LC.LCSK
                 Clients.Caller.loginResult(false, "pass", "");
         }
 
-        public void ChangeStatus(bool online, string connectionId)
+        public void ChangeStatus(bool online, string connectionId, string messages)
         {
             var agent = Agents.SingleOrDefault(x => x.Value.Id == Context.ConnectionId).Value;
             if (agent != null)
@@ -99,16 +99,18 @@ namespace LC.LCSK
                 agent.IsOnline = online;
 
                 // TODO: Check if the agent was in chat sessions.
-
-               AutoTransfer(connectionId);
-               //     RequestChat("hello");
-                
+              
+                if (!online)
+                {
+                    AutoTransfer(connectionId, messages);                    
+                }              
+                               
                 Clients.All.onlineStatus(Agents.Count(x => x.Value.IsOnline) > 0);
             }
         }
 
-        //Transfer user to another agent
-        private void AutoTransfer(string connectionId)
+       
+        private void AutoTransfer(string connectionId, string messages)
         {
             var workload = from a in Agents
                            where a.Value.IsOnline
@@ -132,7 +134,7 @@ namespace LC.LCSK
                 Clients.Caller.addMessage("", "No agent are currently available.");
                 return;
             }
-            Transfer(connectionId, lessBuzy.Name, "Here is all msgs \n Yes \n No");
+            Transfer(connectionId, lessBuzy.Name, messages);
         }
 
         public void EngageVisitor(string connectionId)
@@ -258,7 +260,7 @@ namespace LC.LCSK
 
                 Clients.Client(connectionId).addMessage("", "You have been transfered to " + agent.Name);
                 Clients.Client(connectionId).setChat(connectionId, agent.Name, true);
-
+                                
                 Clients.Caller.addMessage(connectionId, "system", "Chat transfered to " + agentName);
             }
         }
